@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Car Gallery</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+      color: #333;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background-color: #3f51b5;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .nav-links a {
+      margin: 0 10px;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.3s;
+      cursor: pointer;
+    }
+    .nav-links a:hover {
+      color: #ffeb3b;
+    }
+    .search-bar {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      width: 200px;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 30px;
+    }
+    .car {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.4s, box-shadow 0.4s;
+    }
+    .car:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    }
+    .car img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .car-info {
+      padding: 55px;
+      text-align: center;
+      background: #f5f5f5;
+    }
+    .car-info h3 {
+      margin: 10px 0 0 0;
+      font-size: 1.2rem;
+      color: #3f51b5;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 600px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .close {
+      float: right;
+      cursor: pointer;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-links">
+      <a onclick="goHome()">Home</a>
+      <a onclick="showAboutModal()">About Us</a>
+      <a href="https://wa.me/918610032232" target="_blank">Contact Us</a>
+    </div>
+    <input class="search-bar" type="text" id="search" placeholder="Search cars..." />
+  </header>
+
+  <main class="gallery" id="gallery"></main>
+
+  <!-- Car Details Modal -->
+  <div class="modal" id="carModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 id="modalTitle"></h2>
+      <p id="modalDescription"></p>
+    </div>
+  </div>
+
+  <!-- About Us Modal -->
+  <div class="modal" id="aboutModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeAboutModal()">&times;</span>
+      <h2>About Us</h2>
+      <p>
+        Welcome to <strong>DreamRides Inc.</strong>! 🚗💨<br /><br />
+        We're a passionate team of auto enthusiasts who believe every car has a soul.<br />
+        Our mission is to bring you closer to the car of your dreams through vibrant showcases and detailed specs.<br /><br />
+        Founded in 2025 in a small garage, we've grown into a global platform for exotic and classic cars.<br />
+        Buckle up — your dream ride awaits!
+      </p>
+    </div>
+  </div>
+
+  <script>
+const cars = [
+  { name: 'Ferrari F8', description: 'A powerful V8 supercar.', image: 'img/ferrarif8.avif' },
+  { name: 'Lamborghini Aventador', description: 'Lamborghini\'s V12 flagship.', image: 'img/lam aventador.avif' },
+  { name: 'Bugatti Chiron', description: 'Luxury and speed combined.', image: 'img/chiron.jpg' },
+  { name: 'McLaren 720S', description: 'Precision and performance.', image: 'img/mclaren.jpg' },
+  { name: 'Audi R8', description: 'V10 performance for the road.', image: 'img/r8.jpg' },
+  { name: 'Porsche 911 Turbo', description: 'Iconic and fast.', image: 'img/911.jpg' },
+  { name: 'Chevrolet Corvette', description: 'American muscle refined.', image: 'img/corvette.jpg' },
+  { name: 'BMW i8', description: 'Hybrid sports car.', image: 'img/m4.jpg' },
+  { name: 'Tesla Roadster', description: 'Electric performance.', image: 'img/roadster.jpg' },
+  { name: 'Ford Mustang GT', description: 'Classic muscle power.', image: 'img/mustang gt.jpg' },
+  { name: 'Nissan GT-R', description: 'Japanese supercar.', image: 'img/r34.jpg' },
+  { name: 'Aston Martin DB11', description: 'British elegance.', image: 'img/db11.jpg' }
+];
+
+
+    const gallery = document.getElementById('gallery');
+
+    function renderCars(filter = '') {
+      gallery.innerHTML = '';
+      cars
+        .filter(car => car.name.toLowerCase().includes(filter.toLowerCase()))
+        .forEach((car, index) => {
+          const carDiv = document.createElement('div');
+          carDiv.className = 'car';
+          carDiv.innerHTML = `
+            <img src="${car.image}" alt="${car.name}" />
+            <div class="car-info">
+              <h3>${car.name}</h3>
+            </div>
+          `;
+          carDiv.onclick = () => showDetails(index);
+          gallery.appendChild(carDiv);
+        });
+    }
+
+    function showDetails(index) {
+      document.getElementById('modalTitle').textContent = cars[index].name;
+      document.getElementById('modalDescription').textContent = cars[index].description;
+      document.getElementById('carModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('carModal').style.display = 'none';
+    }
+
+    function showAboutModal() {
+      document.getElementById('aboutModal').style.display = 'flex';
+    }
+
+    function closeAboutModal() {
+      document.getElementById('aboutModal').style.display = 'none';
+    }
+
+    function goHome() {
+      location.reload();
+    }
+
+    document.getElementById('search').addEventListener('input', (e) => {
+      renderCars(e.target.value);
+    });
+
+    renderCars();
+  </script>
+</body>
+</html>
